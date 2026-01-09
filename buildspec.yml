@@ -24,3 +24,10 @@ phases:
     commands:
       - echo "Uploading plan.json to S3..."
       - aws s3 cp plan.json s3://$BUCKET_NAME/plans/plan.json
+
+
+
+
+
+
+      #hello
