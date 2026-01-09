@@ -12,14 +12,18 @@ phases:
   build:
     commands:
       - echo Initializing Terraform...
+      - mkdir -p plan
       - cd terraform
       - terraform init -input=false
       - echo Running Terraform plan...
-      - terraform plan -out=tfplan.binary
+      - terraform plan -out=tfplan.binary || exit 1
       - terraform show -json tfplan.binary > ../plan/plan.json
       - echo Running Checkov scan...
       - checkov -d . --output json > ../plan/checkov_results.json
       - cd ..
+
+  post_build:
+    commands:
       - echo Uploading files to S3...
       - aws s3 cp plan/plan.json s3://iac-artifacts-srikar-1234/plans/plan.json
       - aws s3 cp plan/checkov_results.json s3://iac-artifacts-srikar-1234/findings/checkov_results.json
