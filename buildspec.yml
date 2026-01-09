@@ -9,8 +9,8 @@ phases:
     commands:
       - echo Installing dependencies...
       - pip3 install checkov
-      - curl -O https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
-      - unzip terraform_1.5.7_linux_amd64.zip
+      - curl -o terraform.zip https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
+      - unzip terraform.zip
       - mv terraform /usr/local/bin/
   build:
     commands:
@@ -19,7 +19,7 @@ phases:
       - terraform init
       - terraform plan -out=tfplan.binary
       - terraform show -json tfplan.binary > tfplan.json
-  post_build:
-    commands:
-      - echo Uploading plan.json to S3...
-      - aws s3 cp terraform/tfplan.json s3://$BUCKET_NAME/plans/plan.json
+      - aws s3 cp tfplan.json s3://$BUCKET_NAME/plans/plan.json
+      - cd ..
+      - echo Running Checkov scan...
+      - python3 run_scan.py
