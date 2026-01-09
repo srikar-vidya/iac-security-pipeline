@@ -1,30 +1,19 @@
-version: 0.2
-
-env:
-  variables:
-    BUCKET_NAME: iac-artifacts-srikar-1234
-
 phases:
   install:
     commands:
       - echo Installing dependencies...
       - pip3 install checkov
       - curl -O https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
-      - unzip terraform_1.5.7_linux_amd64.zip
+      - unzip -o terraform_1.5.7_linux_amd64.zip
       - mv terraform /usr/local/bin/
-
   build:
     commands:
-      - echo Running Terraform plan...
-      - cd terraform
-      - terraform init || true
-      - terraform plan -out=tfplan.binary || true
-      - terraform show -json tfplan.binary > ../plan.json || true
-      - cd ..
-      - echo Running Checkov scan...
-      - checkov -d terraform || true
-
-  post_build:
-    commands:
-      - echo "Uploading plan.json to S3..."
-      - aws s3 cp plan.json s3://$BUCKET_NAME/plans/plan.json || true
+      - echo Running terraform init...
+      - terraform init
+      - echo Running terraform plan...
+      - mkdir -p plan
+      - terraform plan -out=tfplan
+      - terraform show -json tfplan > plan/plan.json
+      - checkov -f main.tf || true
+      - echo Uploading plan to S3...
+      - aws s3 cp plan/plan.json s3://iac-artifacts-srikar-1234/plans/plan.json
