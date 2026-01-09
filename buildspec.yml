@@ -1,3 +1,5 @@
+version: 0.2
+
 phases:
   install:
     commands:
@@ -6,14 +8,32 @@ phases:
       - curl -O https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
       - unzip -o terraform_1.5.7_linux_amd64.zip
       - mv terraform /usr/local/bin/
+      - terraform --version
+      - checkov --version
+      
   build:
     commands:
       - echo Running terraform init...
       - terraform init
       - echo Running terraform plan...
-      - mkdir -p plan
       - terraform plan -out=tfplan
-      - terraform show -json tfplan > plan/plan.json
-      - checkov -f main.tf || true
-      - echo Uploading plan to S3...
-      - aws s3 cp plan/plan.json s3://iac-artifacts-srikar-1234/plans/plan.json
+      - terraform show -json tfplan > plan.json
+      - echo Running Checkov security scan...
+      - checkov -f main.tf --output json > checkov-report.json || true
+      - checkov -f main.tf --compact || true
+      - echo Uploading artifacts to S3...
+      - aws s3 cp plan.json s3://iac-artifacts-srikar-1234/plans/plan.json
+      - aws s3 cp checkov-report.json s3://iac-artifacts-srikar-1234/checkov/checkov-report.json
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Waiting for Lambda to process findings...
+      - sleep 5
+      - echo Pipeline execution completed!
+
+artifacts:
+  files:
+    - plan.json
+    - checkov-report.json
+  name: terraform-artifacts
