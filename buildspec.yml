@@ -6,10 +6,14 @@ phases:
       - echo Installing Checkov...
       - pip3 install checkov
       - echo Installing Terraform...
-      - wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
-      - unzip terraform_1.5.7_linux_amd64.zip
+      - apt-get update -qq
+      - apt-get install -y wget unzip
+      - wget -q https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
+      - unzip -q terraform_1.5.7_linux_amd64.zip
+      - chmod +x terraform
       - mv terraform /usr/local/bin/
       - terraform --version
+      - echo ✅ Terraform installed successfully
       
   build:
     commands:
@@ -25,7 +29,7 @@ phases:
       - checkov -f main.tf || true
       - echo Uploading plan.json to S3...
       - aws s3 cp plan.json s3://iac-artifacts-srikar-1234/plans/plan.json
-      - echo Upload complete!
+      - echo ✅ Upload complete!
       
   post_build:
     commands:
